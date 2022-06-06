@@ -9,9 +9,11 @@ from pymatgen.io.vasp import Poscar
 # Init global logger for this scope.
 c_log = logging.getLogger(__name__)
 logging.basicConfig(format='[%(levelname)5s - %(funcName)10s] %(message)s')
-c_log.setLevel(logging.WARNING) # Initialise logging level to warning, this will only print out on well, warnings
+c_log.setLevel(logging.WARNING)  # Initialise logging level to warning, this will only print out on well, warnings
 
-def stretch_cell(structure, dimension, scale_amount, fix_bonds):
+
+def stretch_cell(structure: Structure, dimension: int = 2,
+                 scale_amount: float = 0.05, fix_bonds: list = None) -> Structure:
     """ Method to stretch an input structure across a specified dimension with the optional choice to fix a particular bond length
     Pymatgen does all the heavy lifting, although pymatgen is stupid so yeah
     """
@@ -29,24 +31,24 @@ def stretch_cell(structure, dimension, scale_amount, fix_bonds):
 
     # Handle the edge case first
     if fix_bonds is None:
-        return Poscar(ns)
+        return ns
 
     # If bond lengths are to be fixed
     c_log.info(f"Attempting to fix the bond lengths for {fix_bonds[0] and fix_bonds[1]}")
     c_log.debug(f"Distance Matrix for initial structure:\n {structure.distance_matrix.round(2)}")
-    idx_fix2 = [(n,x) for n,x in enumerate(structure) if x.specie.value == fix_bonds[1]]
+    idx_fix2 = [(n, x) for n, x in enumerate(structure) if x.specie.value == fix_bonds[1]]
 
     shift_list = []
-    for idx, site in idx_fix2: # Pair each speices in fix_bonds[1] with a species in fix_bonds[2]
+    for idx, site in idx_fix2:  # Pair each speices in fix_bonds[1] with a species in fix_bonds[2]
         neigh = structure.get_neighbors(site=site, r=3.5)
         neigh = [x for x in neigh if x.specie.value == fix_bonds[0]]
-        x_idx = min(neigh, key=lambda x:x.nn_distance)
+        x_idx = min(neigh, key=lambda x: x.nn_distance)
         c_log.debug(f"Oxygen {site} nearest neighbour is {x_idx} with index {x_idx.index}")
-        c_shift = site.coords[dimension] - x_idx.coords[dimension] #Shift value
+        c_shift = site.coords[dimension] - x_idx.coords[dimension]  # Shift value
         c_log.debug(f"With a shift value of: {c_shift}")
         shift_list.append((idx, x_idx.index, c_shift))
 
-    for idx_1,idx_2, shift in shift_list:
+    for idx_1, idx_2, shift in shift_list:
         c_log.debug(f"Original: {ns[idx_1].coords[dimension]}")
         c_log.debug(f"Neighbour: {ns[idx_2].coords[dimension]}")
         c_log.debug(f"Shift: {shift}")
@@ -56,13 +58,10 @@ def stretch_cell(structure, dimension, scale_amount, fix_bonds):
         c_log.debug(f"Final: {new_xyz[dimension]}")
         ns.replace(i=idx_1, species=ns[idx_1].species, coords=new_xyz, coords_are_cartesian=True)
 
-
-    c_log.info("All finished up")
-
-    return Poscar(ns)
+    return ns
 
 
-def cli_run(argv):
+def cli_run(argv) -> str:
     """Wrapper and Handler of above calls"""
 
     global c_log
@@ -71,9 +70,9 @@ def cli_run(argv):
     # Positional Args
     parser.add_argument("filename", default="CONTCAR", type=str, nargs="?",
                         help="Input file to load as a pymatgen structure")
-    parser.add_argument("dimension", default=2, type=int, nargs="1",
+    parser.add_argument("dimension", default=2, type=int, nargs="?",
                         help="Dimension in which to scale across")
-    parser.add_argument("scale_amount", default=0.05, type=float, nargs=1,
+    parser.add_argument("scale_amount", default=0.05, type=float, nargs="?",
                         help="Fractional Scale amount, defaults to 0.05 (5%)")
 
     # Optional Args
@@ -91,8 +90,12 @@ def cli_run(argv):
     elif args.debug:
         c_log.setLevel(level=logging.DEBUG)
 
+    c_log.debug(args)
+
     structure = Structure.from_file(filename=args.filename)
-    stretch_cell(structure, dimension=args.dimension, scale_amount=args.scale_amount, fix_bonds=args.fix)
+    ns = stretch_cell(structure, dimension=args.dimension, scale_amount=args.scale_amount, fix_bonds=args.fix)
+    print(Poscar(ns))
+
 
 if __name__ == "__main__":
     cli_run(sys.argv[1:])

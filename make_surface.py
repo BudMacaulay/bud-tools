@@ -14,9 +14,11 @@ logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
 
-def make_surface(init_structure, miller_index=None, layer_size=7, vac_size=13, mode="move-sites"):
-    global c_log
+def make_surface(init_structure: Structure, miller_index: list[int] = None,
+                 layer_size: int = 7, vac_size: int = 13,
+                 mode: str = "move-sites") -> None:
 
+    global c_log
     # Guess the oxidation states to detect dipole
     init_structure.add_oxidation_state_by_guess()
 
@@ -44,7 +46,7 @@ def make_surface(init_structure, miller_index=None, layer_size=7, vac_size=13, m
 
     c_log.info(f"Within current structure: Symmetry equivalent indices to {miller_index}:\n"
                f""
-               f"{get_symmetrically_equivalent_miller_indices(structure=init_structure,miller_index=miller_index)[1:]}"
+               f"{get_symmetrically_equivalent_miller_indices(structure=init_structure, miller_index=miller_index)[1:]}"
                f"\n")
 
     t = SlabGenerator(initial_structure=init_structure, miller_index=miller_index, in_unit_planes=False,
@@ -97,8 +99,10 @@ def make_surface(init_structure, miller_index=None, layer_size=7, vac_size=13, m
         for line in datafile:
             f_ile.writelines(" ".join(str(x) for x in line))
 
+    return
 
-def cli_run(argv):
+
+def cli_run(argv) -> None:
     """ Wrapper for the above command, this is basically a quitck and easy wrap for pymatgen stuff """
     parser = argparse.ArgumentParser(description=make_surface.__doc__)
 
@@ -132,8 +136,6 @@ def cli_run(argv):
     init_structure = Structure.from_file(args.bulk_poscar)
     make_surface(init_structure, miller_index=args.millerplane, vac_size=args.vac, layer_size=args.lay,
                  mode=args.recon_mode)
-
-    c_log.info("All done!")
 
 
 if __name__ == "__main__":

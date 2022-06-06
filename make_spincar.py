@@ -9,7 +9,8 @@ std_format = '[%(levelname)5s - %(funcName)10s] %(message)s'
 logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
-def spincar_from_chgcar(chgcar_file="CHGCAR"):
+
+def spincar_from_chgcar(chgcar_file: str = "CHGCAR") -> Structure:
     """
     Very simple routine to split the chgcar into a spin density only file. Used in visualisation of spin densities
     """
@@ -29,9 +30,11 @@ def spincar_from_chgcar(chgcar_file="CHGCAR"):
         c_log.warning('weird, you have too many of the search pattern. Unsure what to do, talk to Bud prhaps')
         return
     spincar = lines[1:app[0]] + lines[app[1]:]
+    spincar_st = "\n".join(spincar)
     return "\n".join(spincar)
 
-def cli_run(argv):
+
+def cli_run(argv) -> str:
     """ Wrapper for the above command, this is basically a quitck and easy wrap for pymatgen stuff """
     global c_log
 
@@ -42,7 +45,8 @@ def cli_run(argv):
 
     if args.debug:   # Verbose setting
         c_log.setLevel(logging.DEBUG)
-    spincar_from_chgcar(args.chgcar)
+
+    print(spincar_from_chgcar(args.chgcar))
 
 
 if __name__ == "__main__":
