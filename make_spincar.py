@@ -9,7 +9,7 @@ std_format = '[%(levelname)5s - %(funcName)10s] %(message)s'
 logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
-def spincar_from_chgcar(chgcar_file):
+def spincar_from_chgcar(chgcar_file="CHGCAR"):
     """
     Very simple routine to split the chgcar into a spin density only file. Used in visualisation of spin densities
     """
@@ -36,7 +36,7 @@ def cli_run(argv):
     global c_log
 
     parser = argparse.ArgumentParser(description=spincar_from_chgcar.__doc__)  # Parser init
-    parser.add_argument("chgcar", type=str, defualt="CHGCAR", help="CHGCAR FILE")
+    parser.add_argument("chgcar", type=str, default="CHGCAR", help="location of CHGCAR file")
     parser.add_argument("--debug", dest="debug", action="store_true")
     args = parser.parse_args(argv)
 
