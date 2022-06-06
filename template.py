@@ -21,14 +21,17 @@ def called_function(var_1: int = 1, var_2: int = 2, var_3: int = 3) -> int:
     return x  # Try to return the pymatgen format here so it can still be used as a function
 
 
-def cli_run(argv) -> str:
-    """ Wrapper for the above command, handles parsing of args and logging, to avoid mess """
+def cli_run(argv) -> None:
+    """
+    Wrapper for the above command, handles parsing of args and logging, to avoid mess
+    """
+
     global c_log
 
     parser = argparse.ArgumentParser(description=called_function.__doc__)  # Parser init
     parser.add_argument("positional_argument", type=str, default="NONE", help="PositionalArgument")
     parser.add_argument("--optional", dest="optional", type=int, default=4, help="OptionalArgument")
-    parser.add_argument("--debug", dest="debug", action="store_true") # Always have the debug optional
+    parser.add_argument("--debug", dest="debug", action="store_true")  # Always have the debug optional
     parser.add_argument("--verbose", dest="verbose", action="store_true")  # Always have the verbose optional
 
     args = parser.parse_args(argv)
@@ -38,7 +41,7 @@ def cli_run(argv) -> str:
     if args.verbose:
         c_log.setLevel(logging.INFO)
 
-    print(called_function(var_1=1, var_2=2, var_3=3))  # Writting to the CLI happens in cli run to seperate pmg from cli
+    print(called_function(var_1=1, var_2=2, var_3=3))  # Writing to the CLI happens in cli run to separate pmg from cli
 
 
 if __name__ == "__main__":

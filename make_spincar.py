@@ -2,15 +2,17 @@
 # coding: utf-8
 
 import sys, argparse, logging
+from typing import Optional
 
 # Adopted format: level - current function name - mess. Width is fixed as visual aid
+
 c_log = logging.getLogger(__name__)
 std_format = '[%(levelname)5s - %(funcName)10s] %(message)s'
 logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
 
-def spincar_from_chgcar(chgcar_file: str = "CHGCAR") -> Structure:
+def spincar_from_chgcar(chgcar_file: str = "CHGCAR") -> Optional[str]:
     """
     Very simple routine to split the chgcar into a spin density only file. Used in visualisation of spin densities
     """
@@ -33,9 +35,11 @@ def spincar_from_chgcar(chgcar_file: str = "CHGCAR") -> Structure:
     spincar_st = "\n".join(spincar)
     return "\n".join(spincar)
 
+def cli_run(argv) -> None:
+    """
+    Wrapper for the above command, this is basically a quitck and easy wrap for pymatgen stuff
+    """
 
-def cli_run(argv) -> str:
-    """ Wrapper for the above command, this is basically a quitck and easy wrap for pymatgen stuff """
     global c_log
 
     parser = argparse.ArgumentParser(description=spincar_from_chgcar.__doc__)  # Parser init
@@ -43,7 +47,7 @@ def cli_run(argv) -> str:
     parser.add_argument("--debug", dest="debug", action="store_true")
     args = parser.parse_args(argv)
 
-    if args.debug:   # Verbose setting
+    if args.debug:
         c_log.setLevel(logging.DEBUG)
 
     print(spincar_from_chgcar(args.chgcar))

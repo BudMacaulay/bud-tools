@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import sys, os, argparse, logging
-from pymatgen.core.surface import SlabGenerator
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-from pymatgen.core.surface import Structure, Lattice, get_symmetrically_distinct_miller_indices, \
-    get_symmetrically_equivalent_miller_indices
+import argparse, logging, os, sys
+
 import numpy as np
+from pymatgen.core.surface import SlabGenerator
+from pymatgen.core.surface import Structure, get_symmetrically_equivalent_miller_indices
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 c_log = logging.getLogger(__name__)
 # Adopted format: level - current function name - mess. Width is fixed as visual aid
@@ -14,7 +14,7 @@ logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
 
-def make_surface(init_structure: Structure, miller_index: list[int] = None,
+def make_surface(init_structure: Structure, miller_index: tuple = None,
                  layer_size: int = 7, vac_size: int = 13,
                  mode: str = "move-sites") -> None:
 
@@ -58,7 +58,7 @@ def make_surface(init_structure: Structure, miller_index: list[int] = None,
     elif mode == "move-sites":
         slabs = t.get_slabs(symmetrize=False, repair=True)
     else:
-        c_log.warning(f"mode: {mode} not found, Exitting")
+        c_log.warning(f"mode: {mode} not found, Exiting")
         return
 
     datafile = [["NAME", "SIZE", "Area", "Cnorm", "Symmetry", "Polarity", "Tasker Type"]]
@@ -103,16 +103,20 @@ def make_surface(init_structure: Structure, miller_index: list[int] = None,
 
 
 def cli_run(argv) -> None:
-    """ Wrapper for the above command, this is basically a quitck and easy wrap for pymatgen stuff """
-    parser = argparse.ArgumentParser(description=make_surface.__doc__)
+    """
+    Wrapper for the above command, this is basically a quick and easy wrap for pymatgen stuff
+    """
 
+    global c_log
+
+    parser = argparse.ArgumentParser(description=make_surface.__doc__)
     # Someone make argparse a little easier to read the docs before i scream #
     parser.add_argument("bulk_poscar", type=str, help="BULK POSCAR YOU WISH TO SLICE")
     parser.add_argument("-m", dest="millerplane", help="The miller plane you would like to slice across", nargs=3,
                         type=int)
 
     # Optional flags - these probably need some fiddling and are likely system dependant
-    parser.add_argument("-v", dest="vac", default=20, help="vaccuum size", type=float)
+    parser.add_argument("-v", dest="vac", default=20, help="vacuum size", type=float)
     parser.add_argument("-l", dest="lay", default=11, type=float,
                         help="layers to generate (in angstrom - Good values are 11+")
     parser.add_argument("--mode", dest="recon_mode", default="move-sites", type=str,
@@ -121,9 +125,6 @@ def cli_run(argv) -> None:
     parser.add_argument("--verbose", dest="verbose", action="store_true")
     parser.add_argument("--debug", dest="debug", action="store_true")
     args = parser.parse_args(argv)
-
-    # Verbose setting
-    global c_log
 
     if args.verbose:
         c_log.setLevel(logging.INFO)

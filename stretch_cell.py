@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import os, argparse, logging
+import argparse, logging
 
 from pymatgen.core import Structure, Lattice
 from pymatgen.io.vasp import Poscar
@@ -14,7 +14,8 @@ c_log.setLevel(logging.WARNING)  # Initialise logging level to warning, this wil
 
 def stretch_cell(structure: Structure, dimension: int = 2,
                  scale_amount: float = 0.05, fix_bonds: list = None) -> Structure:
-    """ Method to stretch an input structure across a specified dimension with the optional choice to fix a particular bond length
+    """
+    Method to stretch an input structure across a specified dimension with the optional choice to fix a Spec1-Spec2
     Pymatgen does all the heavy lifting, although pymatgen is stupid so yeah
     """
     global c_log
@@ -22,12 +23,12 @@ def stretch_cell(structure: Structure, dimension: int = 2,
     c_log.info(f"Loaded Structure has: {len(structure)} sites")
     c_log.info(f"Composition: {structure.composition.formula}")
 
-    l = list(structure.lattice.parameters)
-    l[dimension] = l[dimension] * (1.00 + scale_amount)
-    c_log.info(f"Initial Lattice dimensions: {l}")
+    lat_orig = list(structure.lattice.parameters)
+    lat_orig[dimension] = lat_orig[dimension] * (1.00 + scale_amount)
+    c_log.info(f"Initial Lattice dimensions: {lat_orig}")
     c_log.info(f"Stretching dimension {dimension} by {1.00 + scale_amount} of original")
-    c_log.info(f"New Lattice dimensions: {l}")
-    ns = Structure(coords=structure.frac_coords, species=structure.species, lattice=Lattice.from_parameters(*l))
+    c_log.info(f"New Lattice dimensions: {lat_orig}")
+    ns = Structure(coords=structure.frac_coords, species=structure.species, lattice=Lattice.from_parameters(*lat_orig))
 
     # Handle the edge case first
     if fix_bonds is None:
@@ -39,7 +40,7 @@ def stretch_cell(structure: Structure, dimension: int = 2,
     idx_fix2 = [(n, x) for n, x in enumerate(structure) if x.specie.value == fix_bonds[1]]
 
     shift_list = []
-    for idx, site in idx_fix2:  # Pair each speices in fix_bonds[1] with a species in fix_bonds[2]
+    for idx, site in idx_fix2:  # Pair each species in fix_bonds[1] with a species in fix_bonds[2]
         neigh = structure.get_neighbors(site=site, r=3.5)
         neigh = [x for x in neigh if x.specie.value == fix_bonds[0]]
         x_idx = min(neigh, key=lambda x: x.nn_distance)
@@ -52,7 +53,7 @@ def stretch_cell(structure: Structure, dimension: int = 2,
         c_log.debug(f"Original: {ns[idx_1].coords[dimension]}")
         c_log.debug(f"Neighbour: {ns[idx_2].coords[dimension]}")
         c_log.debug(f"Shift: {shift}")
-        # Stupidly Niave approach, cause why would changing the coords result in changing the coordss
+        # Stupidly Naive approach, cause why would changing the coords result in changing the coords
         # ns[idx_1].coords[dimension] = new_structure[idx_2].coords[dimension] + shift
         new_xyz = [ns[idx_1].coords[0], ns[idx_1].coords[1], ns.coords[dimension] + shift]
         c_log.debug(f"Final: {new_xyz[dimension]}")
@@ -61,8 +62,10 @@ def stretch_cell(structure: Structure, dimension: int = 2,
     return ns
 
 
-def cli_run(argv) -> str:
-    """Wrapper and Handler of above calls"""
+def cli_run(argv) -> None:
+    """
+    Wrapper for the above command, handles parsing of args and logging, to avoid mess
+    """
 
     global c_log
 

@@ -2,6 +2,8 @@
 # coding: utf-8
 
 import sys, argparse, logging
+from typing import Optional, List
+
 from pymatgen.core import Structure
 from pymatgen.io.vasp import Poscar
 
@@ -12,12 +14,12 @@ logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
 
-def make_supercell(structure: Structure, scale_matrix: list[int] = None) -> Structure:
+def make_supercell(structure: Structure, scale_matrix: Optional[List[int]] = None) -> Structure:
     """
     Uses pymatgen structure to make a supercell very simple.
     """
 
-    if scale_matrix is None: # Init if not supplied
+    if scale_matrix is None:  # Init if not supplied
         scale_matrix = [1, 1, 1]
     if scale_matrix == [1, 1, 1]:
         c_log.warning(f"Scale Matrix not supplied, scaling by 1,1,1 [i.e dumping back poscar]")
@@ -30,20 +32,23 @@ def make_supercell(structure: Structure, scale_matrix: list[int] = None) -> Stru
     return structure
 
 
-def cli_run(argv) -> str:
-    """ Wrapper for the above command, handles parsing of args and logging, to avoid mess """
+def cli_run(argv) -> None:
+    """
+    Wrapper for the above command, handles parsing of args and logging, to avoid mess
+    """
+
     global c_log
 
     parser = argparse.ArgumentParser(description=make_supercell.__doc__)  # Parser init
     parser.add_argument("poscar", type=str, default="POSCAR", help="Location of POSCAR file", nargs="?")
 
     parser.add_argument("--sm", dest="scale_matrix", type=int, nargs="+", default=[1, 1, 1],
-                        help="Scaling matrix as space seperated integers")
+                        help="Scaling matrix as space separated integers")
     parser.add_argument("--verbose", dest="verbose", action="store_true", help="verbose printing")
-    parser.add_argument("--debug", dest="debug", action="store_true", help="Debugflag") # Always have the debug optional
+    parser.add_argument("--debug", dest="debug", action="store_true", help="flag for debugging")  # Always debug
     args = parser.parse_args(argv)
 
-    if args.debug:  # Always include method for switching verbosity
+    if args.debug:
         c_log.setLevel(logging.DEBUG)
     if args.verbose:
         c_log.setLevel(logging.INFO)

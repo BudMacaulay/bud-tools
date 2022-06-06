@@ -25,10 +25,11 @@ def scale_abc(structure: Structure, volume_change: float) -> Structure:
     return structure
 
 
-def cli_run(argv) -> str:
+def cli_run(argv) -> None:
     """
     Wrapper for the above command, handles parsing of args and logging, to avoid mess
     """
+
     global c_log
 
     parser = argparse.ArgumentParser(description=scale_abc.__doc__)  # Parser init
@@ -37,7 +38,7 @@ def cli_run(argv) -> str:
                         help="volume change as a fraction")
 
     parser.add_argument("--verbose", dest="verbose", action="store_true", help="verbose printing")
-    parser.add_argument("--debug", dest="debug", action="store_true", help="Debugflag") # Always have the debug optional
+    parser.add_argument("--debug", dest="debug", action="store_true")  # Always have the debug optional
     args = parser.parse_args(argv)
 
     if args.debug:  # Always include method for switching verbosity
