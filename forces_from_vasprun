@@ -31,7 +31,7 @@ def forces_from_vasprun(vs: Vasprun, resolution: int = 1) -> str:
         y_avg.append(avg_force)
         x.append(step * resolution)
 
-    zp = zip(x,y_max, y_avg)
+    zp = zip(x, y_max, y_avg)
     p = pd.DataFrame(zp)
     return p.to_string(header=False, index=False)
 
@@ -62,6 +62,7 @@ def cli_run(argv) -> None:
                  parse_projected_eigen=False, parse_potcar_file=False, occu_tol=1e-8, exception_on_bad_xml=True)
 
     print(forces_from_vasprun(vs=vs, resolution=args.resolution))
+
 
 if __name__ == "__main__":
     cli_run(sys.argv[1:])

@@ -3,7 +3,6 @@
 
 import sys, argparse, logging
 import pandas as pd
-from numpy import linalg as la
 
 from pymatgen.io.vasp import Vasprun
 
@@ -12,6 +11,7 @@ c_log = logging.getLogger(__name__)
 std_format = '[%(levelname)5s - %(funcName)10s] %(message)s'
 logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
+
 
 def energy_from_vasprun(vs: Vasprun, resolution: int = 1, electronic: bool = False) -> str:
     """
@@ -69,6 +69,7 @@ def cli_run(argv) -> None:
                  parse_projected_eigen=False, parse_potcar_file=False, occu_tol=1e-8, exception_on_bad_xml=True)
 
     print(energy_from_vasprun(vs=vs, resolution=args.resolution))
+
 
 if __name__ == "__main__":
     cli_run(sys.argv[1:])
