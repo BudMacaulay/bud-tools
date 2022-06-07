@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse, logging, os, sys
-
+import argparse, logging, os, sys, json
 import numpy as np
+from monty.json import MontyEncoder
+
 from pymatgen.core.surface import SlabGenerator
 from pymatgen.core.surface import Structure, get_symmetrically_equivalent_miller_indices
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
@@ -17,7 +18,6 @@ c_log.setLevel(logging.WARNING)
 def make_surface(init_structure: Structure, miller_index: tuple = None,
                  layer_size: int = 7, vac_size: int = 13,
                  mode: str = "move-sites") -> None:
-
     global c_log
     # Guess the oxidation states to detect dipole
     init_structure.add_oxidation_state_by_guess()
@@ -68,11 +68,11 @@ def make_surface(init_structure: Structure, miller_index: tuple = None,
         slab.sort()
         if not slab.is_polar() and slab.is_symmetric():
             c_log.debug(f"Slab {n}: is Tasker Type 2")
-            fn = f"slabs/type2_{n}_{''.join(str(a) for a in slab.miller_index)}.vasp"
+            fn = f"slabs/{n}_type2_{''.join(str(a) for a in slab.miller_index)}.vasp"
             slab.to(fmt="poscar", filename=fn)
         else:
             c_log.debug(f"Slab {n}: is Tasker Type 3; saving and also adding to reconstruction list")
-            fn = f"slabs/type3_{n}_{''.join(str(a) for a in slab.miller_index)}.vasp"
+            fn = f"slabs/{n}_type3_{''.join(str(a) for a in slab.miller_index)}.vasp"
             slab.to(fmt="poscar", filename=fn)
             sc = slab
             sc.make_supercell(scaling_matrix=[2, 1, 1])
@@ -81,19 +81,27 @@ def make_surface(init_structure: Structure, miller_index: tuple = None,
             [fn.split("/")[-1], len(slab), round(slab.surface_area, 3), round(slab.normal[2], 3), slab.is_symmetric(),
              np.linalg.norm(slab.dipole / slab.surface_area)])
 
+        d = json.dumps(slab.as_dict(), cls=MontyEncoder)
+        with open(f'slabs/slab_{n}.json', 'w') as f:
+            f.write(d)
+
     c_log.info(f"Total number of Tasker type 3 slabs: {len(work_on)}")
     c_log.info(f"Proceeding to tasker 2 said slabs")
     for n, slab in enumerate(work_on):
         slab.sort()
         if not slab.is_polar(tol_dipole_per_unit_area=1e-2) and slab.is_symmetric():
-            fn = f"slabs/tc_type2_{len(slabs) + n}_{''.join(str(a) for a in slab.miller_index)}.vasp"
+            fn = f"slabs/{len(slabs) + n}_tc_type2_{''.join(str(a) for a in slab.miller_index)}.vasp"
             slab.to(fmt="poscar", filename=fn)
         else:
-            fn = f"slabs/failedtc_type3_{len(slabs) + n}_{''.join(str(a) for a in slab.miller_index)}.vasp"
+            fn = f"slabs/{len(slabs) + n}_ftc_type3_{''.join(str(a) for a in slab.miller_index)}.vasp"
             slab.to(fmt="poscar", filename=fn)
         datafile.append(
             [fn.split("/")[-1], len(slab), round(slab.surface_area), round(slab.normal[2], 3), slab.is_symmetric(),
              np.linalg.norm(slab.dipole / slab.surface_area)])
+
+        d = json.dumps(slab.as_dict(), cls=MontyEncoder)
+        with open(f'slabs/slab_{n + len(slabs)}.json', 'w') as f:
+            f.write(d)
 
     with open("slabs/make_surface.dat", "w+") as f_ile:
         for line in datafile:
