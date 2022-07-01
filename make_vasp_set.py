@@ -154,7 +154,7 @@ def sort_incar_flags(incar: Incar):
 
 
 def make_vasp_set(structure: Structure, fmt="unknown", ox_states=None,
-                  user_incar_settings=None, user_kpoint_settings=None):
+                  user_incar_settings=None, user_kpoints_settings=None):
     """
     Make a vaspset from a structure,
 
@@ -175,17 +175,17 @@ def make_vasp_set(structure: Structure, fmt="unknown", ox_states=None,
 
     if fmt.lower().startswith("u"):
         vaspset = BtRelaxUnknownSet(structure=structure, user_incar_settings=user_incar_settings,
-                                    user_kpoint_settings=user_kpoint_settings)
+                                    user_kpoints_settings=user_kpoints_settings)
     elif fmt.lower().startswith("m"):
         vaspset = BtRelaxMetalSet(structure=structure, user_incar_settings=user_incar_settings,
-                                  user_kpoint_settings=user_kpoint_settings)
+                                  user_kpoints_settings=user_kpoints_settings)
     elif fmt.lower().startswith("i"):
         vaspset = BtRelaxInsulSet(structure=structure, user_incar_settings=user_incar_settings,
-                                  user_kpoint_settings=user_kpoint_settings)
+                                  user_kpoints_settings=user_kpoints_settings)
     else:
         c_log.warning(f"type set to: {fmt} this is not recommended")
         vaspset = BtRelaxUnknownSet(structure=structure, user_incar_settings=user_incar_settings,
-                                    user_kpoint_settings=user_kpoint_settings)
+                                    user_kpoints_settings=user_kpoints_settings)
     return vaspset
 
 
@@ -198,18 +198,20 @@ def cli_run(argv) -> None:
 
     parser = argparse.ArgumentParser(description=make_vasp_set.__doc__)  # Parser init
     parser.add_argument("filename", type=str, default="POSCAR", help="location of the pymatgen structure")
-    parser.add_argument("output_dir", type=str, default="./", help="location to create the vasp set")
+    parser.add_argument("output_dir", type=str, default=".", help="location to create the vasp set")
+
+    parser.add_argument("-f", "--fmt", dest="fmt", default="unknown", help="format of the desired incar")
 
     parser.add_argument("-o", "--ox_states", dest="ox_states", nargs="*",
                         default=None, help="oxidation states as space seperated key value pairs i.e: Li 1")
 
-    parser.add_argument("", "--iflags", dest="incar_settings", nargs="*",
+    parser.add_argument("-i", "--iflags", dest="incar_settings", nargs="*",
                         default=None, help="incar flags as space seperated key value pairs i.e: ENCUT 600")
 
     parser.add_argument("--kflags", dest="k_settings", nargs="*",
                         default=None, help="kpoint flags as space seperated key value paris i.e: mode line")
 
-
+    parser.add_argument("--debug", dest="debug", action="store_true")  # Always have the verbose optional
     parser.add_argument("--verbose", dest="verbose", action="store_true")  # Always have the verbose optional
 
     args = parser.parse_args(argv)
@@ -220,9 +222,13 @@ def cli_run(argv) -> None:
         c_log.setLevel(logging.INFO)
     c_log.debug(args)
 
-    vaspset = make_vasp_set(structure=args.filename, fmt=args.fmt,
-                            ox_states=args.ox_states, )
 
+    structure = Structure.from_file(args.filename)
+    vaspset = make_vasp_set(structure=structure, fmt=args.fmt,
+                            ox_states=args.ox_states)
+
+    vaspset.write_input(output_dir=args.output_dir,
+                        make_dir_if_not_present=True, include_cif=True)
 
 if __name__ == "__main__":
     cli_run(sys.argv[1:])

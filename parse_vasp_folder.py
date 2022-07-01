@@ -7,6 +7,7 @@ import sys, argparse, logging
 from pymatgen.io.vasp import Oszicar
 from pymatgen.io.vasp import Vasprun
 from pymatgen.io.vasp import Outcar
+from pymatgen.io.vasp import Kpoints
 from pymatgen.core import Structure
 
 # Adopted format: level - current function name - mess. Width is fixed as visual aid
@@ -16,10 +17,21 @@ logging.basicConfig(format=std_format)
 c_log.setLevel(logging.WARNING)
 
 
-def parse_vasp_folder() -> None:
+def parse_vasp_folder(folder,
+                      read_contcar=True, read_incar=True, read_vasprun=True, read_kpoints=True) -> None:
     """
     Method for parsing a folder containing a vasp calculation and parsing potentially important information.
     """
+
+    if read_contcar:
+        contcar = folder + "/CONTCAR"
+        structure = Structure.from_file(filename=contcar)
+
+    if read_vasprun:
+        vasprun = folder + "/vasprun.xml"
+        vasprun = Vasprun(filename=vasprun)
+        if read_incar:
+            incar = vasprun.incar
     pass
 
 def cli_run(argv) -> None:
@@ -29,7 +41,7 @@ def cli_run(argv) -> None:
 
     global c_log
 
-    parser = argparse.ArgumentParser(description=called_function.__doc__)  # Parser init
+    parser = argparse.ArgumentParser(description=parse_vasp_folder.__doc__)  # Parser init
     parser.add_argument("positional_argument", type=str, default="NONE", help="PositionalArgument")
     parser.add_argument("--optional", dest="optional", type=int, default=4, help="OptionalArgument")
     parser.add_argument("--debug", dest="debug", action="store_true")  # Always have the debug optional

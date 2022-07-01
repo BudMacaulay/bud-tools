@@ -41,9 +41,9 @@ def cli_run(argv) -> None:
 
     parser = argparse.ArgumentParser(description=make_supercell.__doc__)  # Parser init
     parser.add_argument("poscar", type=str, default="POSCAR", help="Location of POSCAR file", nargs="?")
-
-    parser.add_argument("--sm", dest="scale_matrix", type=int, nargs="+", default=[1, 1, 1],
+    parser.add_argument("scale_matrix", type=int, nargs=3, default=[1, 1, 1],
                         help="Scaling matrix as space separated integers")
+
     parser.add_argument("--verbose", dest="verbose", action="store_true", help="verbose printing")
     parser.add_argument("--debug", dest="debug", action="store_true", help="flag for debugging")  # Always debug
     args = parser.parse_args(argv)
